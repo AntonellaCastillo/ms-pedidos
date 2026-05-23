@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import com.perfulandia.ms_pedidos.dto.VentaDTO;
 import com.perfulandia.ms_pedidos.model.Pedido;
 import com.perfulandia.ms_pedidos.repository.PedidoRepository;
 
@@ -40,8 +41,16 @@ public class PedidoService {
     // Crear pedido con resiliencia hacia MS Ventas
     public Pedido save(Pedido pedido) {
         try {
+            // Construir DTO con datos relevantes para MS Ventas
+            VentaDTO ventaDTO = new VentaDTO(
+                pedido.getIdPedido(),
+                pedido.getIdCliente(),
+                pedido.getIdSucursal(),
+                pedido.getTotal(),
+                "PENDIENTE"
+            );
             // Intentar notificar a MS Ventas
-            restTemplate.postForObject(MS_VENTAS_URL, pedido, String.class);
+            restTemplate.postForObject(MS_VENTAS_URL, ventaDTO, String.class);
             pedido.setEstado("PENDIENTE");
         } catch (Exception e) {
             // Fallback — MS Ventas no disponible

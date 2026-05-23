@@ -15,7 +15,7 @@ public class DetallePedidoService {
 
     // Listar detalles por pedido
     public List<DetallePedido> findByIdPedido(Long idPedido) {
-        return detallePedidoRepository.findByIdPedido(idPedido);
+        return detallePedidoRepository.findByPedidoIdPedido(idPedido);
     }
 
     // Agregar detalle a un pedido

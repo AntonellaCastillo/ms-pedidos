@@ -15,8 +15,9 @@ public class DetallePedido {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idDetalle;
 
-    @NotNull(message = "El id del pedido es obligatorio")
-    private Long idPedido;
+    @ManyToOne
+    @JoinColumn(name = "id_pedido", nullable = false)
+    private Pedido pedido;
 
     @NotNull(message = "El id del producto es obligatorio")
     private Long idProducto;
