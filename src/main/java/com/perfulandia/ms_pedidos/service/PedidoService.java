@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import com.perfulandia.ms_pedidos.dto.VentaDTO;
+import com.perfulandia.ms_pedidos.model.EstadoPedido;
 import com.perfulandia.ms_pedidos.model.Pedido;
 import com.perfulandia.ms_pedidos.repository.PedidoRepository;
 
@@ -52,11 +53,11 @@ public class PedidoService {
                 "PENDIENTE"
             );
             restTemplate.postForObject(MS_VENTAS_URL, ventaDTO, String.class);
-            pedido.setEstado("PENDIENTE");
+            pedido.setEstado(EstadoPedido.PENDIENTE);
             log.info("MS Ventas notificado correctamente");
         } catch (Exception e) {
             log.warn("MS Ventas no disponible: {}. Guardando en contingencia", e.getMessage());
-            pedido.setEstado("PENDIENTE_SINCRONIZAR_VENTAS");
+            pedido.setEstado(EstadoPedido.PENDIENTE_SINCRONIZAR_VENTAS);
         }
         Pedido guardado = pedidoRepository.save(pedido);
         log.info("Pedido creado con id: {}", guardado.getIdPedido());
@@ -66,7 +67,7 @@ public class PedidoService {
     public Optional<Pedido> actualizarEstado(Long id, String nuevoEstado) {
         log.info("Actualizando estado del pedido {} a {}", id, nuevoEstado);
         return pedidoRepository.findById(id).map(pedido -> {
-            pedido.setEstado(nuevoEstado);
+            pedido.setEstado(EstadoPedido.valueOf(nuevoEstado));
             return pedidoRepository.save(pedido);
         });
     }
@@ -74,11 +75,11 @@ public class PedidoService {
     public Optional<Pedido> cancelarPedido(Long id) {
         log.info("Intentando cancelar pedido con id: {}", id);
         return pedidoRepository.findById(id).map(pedido -> {
-            if (pedido.getEstado().equals("ENVIADO")) {
+            if (pedido.getEstado().equals(EstadoPedido.ENVIADO)) {
                 log.warn("No se puede cancelar pedido {} porque está ENVIADO", id);
                 throw new RuntimeException("No se puede cancelar un pedido que ya fue enviado");
             }
-            pedido.setEstado("CANCELADO");
+            pedido.setEstado(EstadoPedido.CANCELADO);
             log.info("Pedido {} cancelado correctamente", id);
             return pedidoRepository.save(pedido);
         });

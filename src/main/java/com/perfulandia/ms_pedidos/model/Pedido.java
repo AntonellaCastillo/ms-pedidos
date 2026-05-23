@@ -25,8 +25,9 @@ public class Pedido {
     @NotNull(message = "La fecha es obligatoria")
     private LocalDateTime fecha;
 
-    @NotBlank(message = "El estado es obligatorio")
-    private String estado;
+    @NotNull(message = "El estado es obligatorio")
+    @Enumerated(EnumType.STRING)
+    private EstadoPedido estado;
 
     @NotNull(message = "El total es obligatorio")
     @Min(value = 0, message = "El total no puede ser negativo")
