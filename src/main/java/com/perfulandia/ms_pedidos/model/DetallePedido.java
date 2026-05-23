@@ -3,6 +3,7 @@ package com.perfulandia.ms_pedidos.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "detalle_pedido")
@@ -27,10 +28,10 @@ public class DetallePedido {
     private Integer cantidad;
 
     @NotNull(message = "El precio unitario es obligatorio")
-    @Min(value = 0, message = "El precio unitario no puede ser negativo")
-    private Double precioUnitario;
+    @DecimalMin(value = "0.0", message = "El precio unitario no puede ser negativo")
+    private BigDecimal precioUnitario;
 
     @NotNull(message = "El subtotal es obligatorio")
-    @Min(value = 0, message = "El subtotal no puede ser negativo")
-    private Double subtotal;
+    @DecimalMin(value = "0.0", message = "El subtotal no puede ser negativo")
+    private BigDecimal subtotal;
 }
