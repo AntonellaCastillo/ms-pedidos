@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.perfulandia.ms_pedidos.model.Pedido;
 import com.perfulandia.ms_pedidos.repository.PedidoRepository;
@@ -14,6 +15,12 @@ public class PedidoService {
 
     @Autowired
     private PedidoRepository pedidoRepository;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    // URL de MS Ventas
+    private static final String MS_VENTAS_URL = "http://localhost:8085/api/v1/ventas";
 
     // Listar todos los pedidos
     public List<Pedido> findAll() {
@@ -30,8 +37,17 @@ public class PedidoService {
         return pedidoRepository.findByIdCliente(idCliente);
     }
 
-    // Crear pedido
+    // Crear pedido con resiliencia hacia MS Ventas
     public Pedido save(Pedido pedido) {
+        try {
+            // Intentar notificar a MS Ventas
+            restTemplate.postForObject(MS_VENTAS_URL, pedido, String.class);
+            pedido.setEstado("PENDIENTE");
+        } catch (Exception e) {
+            // Fallback — MS Ventas no disponible
+            System.out.println("MS Ventas no disponible: " + e.getMessage());
+            pedido.setEstado("PENDIENTE_SINCRONIZAR_VENTAS");
+        }
         return pedidoRepository.save(pedido);
     }
 
@@ -43,7 +59,7 @@ public class PedidoService {
         });
     }
 
-    // Cancelar pedido — Regla de negocio 
+    // Cancelar pedido — Regla de negocio KAN-63
     public Optional<Pedido> cancelarPedido(Long id) {
         return pedidoRepository.findById(id).map(pedido -> {
             if (pedido.getEstado().equals("ENVIADO")) {
