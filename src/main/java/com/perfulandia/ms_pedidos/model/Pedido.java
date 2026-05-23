@@ -3,6 +3,7 @@ package com.perfulandia.ms_pedidos.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,8 +31,8 @@ public class Pedido {
     private EstadoPedido estado;
 
     @NotNull(message = "El total es obligatorio")
-    @Min(value = 0, message = "El total no puede ser negativo")
-    private Double total;
+    @DecimalMin(value = "0.0", message = "El total no puede ser negativo")
+    private BigDecimal total;
 
     @NotBlank(message = "La direccion de envio es obligatoria")
     private String direccionEnvio;
