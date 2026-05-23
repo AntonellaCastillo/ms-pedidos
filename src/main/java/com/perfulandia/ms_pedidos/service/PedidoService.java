@@ -44,22 +44,29 @@ public class PedidoService {
 
     public Pedido save(Pedido pedido) {
         log.info("Intentando crear pedido para cliente: {}", pedido.getIdCliente());
+
+        // Primero guardamos el pedido
+        Pedido guardado = pedidoRepository.save(pedido);
+
         try {
+            // Luego notificamos a MS Ventas con el id ya generado
             VentaDTO ventaDTO = new VentaDTO(
-                pedido.getIdPedido(),
-                pedido.getIdCliente(),
-                pedido.getIdSucursal(),
-                pedido.getTotal(),
+                guardado.getIdPedido(),
+                guardado.getIdCliente(),
+                guardado.getIdSucursal(),
+                guardado.getTotal(),
                 "PENDIENTE"
             );
             restTemplate.postForObject(MS_VENTAS_URL, ventaDTO, String.class);
-            pedido.setEstado(EstadoPedido.PENDIENTE);
+            guardado.setEstado(EstadoPedido.PENDIENTE);
+            pedidoRepository.save(guardado);
             log.info("MS Ventas notificado correctamente");
         } catch (Exception e) {
             log.warn("MS Ventas no disponible: {}. Guardando en contingencia", e.getMessage());
-            pedido.setEstado(EstadoPedido.PENDIENTE_SINCRONIZAR_VENTAS);
+            guardado.setEstado(EstadoPedido.PENDIENTE_SINCRONIZAR_VENTAS);
+            pedidoRepository.save(guardado);
         }
-        Pedido guardado = pedidoRepository.save(pedido);
+
         log.info("Pedido creado con id: {}", guardado.getIdPedido());
         return guardado;
     }
