@@ -7,7 +7,10 @@ import com.perfulandia.ms_pedidos.model.DetallePedido;
 
 @Repository
 public interface DetallePedidoRepository extends JpaRepository<DetallePedido, Long> {
-    
+
     // Buscar todos los detalles de un pedido específico
     List<DetallePedido> findByPedidoIdPedido(Long idPedido);
+
+    // Buscar detalles por producto
+    List<DetallePedido> findByIdProducto(Long idProducto);
 }
