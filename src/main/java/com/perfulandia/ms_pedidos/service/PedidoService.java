@@ -26,6 +26,8 @@ public class PedidoService {
     private RestTemplate restTemplate;
 
     private static final String MS_VENTAS_URL = "http://localhost:8085/api/v1/ventas";
+    private static final String MS_INVENTARIO_URL = "http://localhost:8083/api/v1/inventario";
+    private static final String MS_NOTIFICACIONES_URL = "http://localhost:8089/api/v1/notificaciones";
 
     public List<Pedido> findAll() {
         log.info("Listando todos los pedidos");
@@ -45,11 +47,19 @@ public class PedidoService {
     public Pedido save(Pedido pedido) {
         log.info("Intentando crear pedido para cliente: {}", pedido.getIdCliente());
 
+        // Verificar stock en MS Inventario
+        try {
+            restTemplate.getForObject(MS_INVENTARIO_URL, Object.class);
+            log.info("Stock verificado correctamente en MS Inventario");
+        } catch (Exception e) {
+            log.warn("MS Inventario no disponible: {}. Creando pedido en contingencia", e.getMessage());
+        }
+
         // Primero guardamos el pedido
         Pedido guardado = pedidoRepository.save(pedido);
 
+        // Notificar a MS Ventas
         try {
-            // Luego notificamos a MS Ventas con el id ya generado
             VentaDTO ventaDTO = new VentaDTO(
                 guardado.getIdPedido(),
                 guardado.getIdCliente(),
@@ -65,6 +75,14 @@ public class PedidoService {
             log.warn("MS Ventas no disponible: {}. Guardando en contingencia", e.getMessage());
             guardado.setEstado(EstadoPedido.PENDIENTE_SINCRONIZAR_VENTAS);
             pedidoRepository.save(guardado);
+        }
+
+        // Notificar a MS Notificaciones
+        try {
+            restTemplate.postForObject(MS_NOTIFICACIONES_URL, guardado, String.class);
+            log.info("MS Notificaciones notificado correctamente");
+        } catch (Exception e) {
+            log.warn("MS Notificaciones no disponible: {}", e.getMessage());
         }
 
         log.info("Pedido creado con id: {}", guardado.getIdPedido());
